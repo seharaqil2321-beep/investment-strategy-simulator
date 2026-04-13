@@ -19,7 +19,7 @@ st.title(" Personal Investment Strategy Simulator (Live)")
 st.caption(f"Live Market Analysis | Last Updated: {datetime.now().strftime('%H:%M:%S')}")
 
 # ---------------- SIDEBAR INPUTS ----------------
-with st.sidebar:
+with st. sidebar:
     st.header("👤 User Profile")
     currency = st.selectbox("Currency", ["USD", "PKR", "EUR"])
     income = st.number_input("Monthly Income", min_value=0)
@@ -45,32 +45,48 @@ try:
     stock_data = yf.Ticker(stock_symbol).history(period="1y")
     bond_data = yf.Ticker(bond_symbol).history(period="1y")
 
+if stock_data.empty or bond_data.empty:
+    st.error("One or more ticker symbols (Stock/Bond) are invalid. Please check your inputs.")
+    st.stop()
+
     # Binance API for Crypto
-    url = f"https://api.binance.com/api/v3/klines?symbol={crypto_symbol}&interval=1d&limit=365"
-    res = requests.get(url).json()
-    crypto_df = pd.DataFrame(res, columns=[
-        "Open Time", "Open", "High", "Low", "Close", "Vol",
-        "CT", "QV", "NT", "TB", "TQ", "I"
-    ])
-    crypto_df["Close"] = crypto_df["Close"].astype(float)
+    # Replace your current Crypto fetching block with this:
+try:
+    url = f"https://api.binance.com/api/v3/klines?symbol={crypto_symbol.upper()}&interval=1d&limit=365"
+    res = requests.get(url)
+    data = res.json()
+    
+    if isinstance(data, list) and len(data) > 0:
+        crypto_df = pd.DataFrame(data, columns=[
+            "Open Time", "Open", "High", "Low", "Close", "Vol",
+            "CT", "QV", "NT", "TB", "TQ", "I"
+        ])
+        crypto_df["Close"] = crypto_df["Close"].astype(float)
+    else:
+        st.error(f"Could not find crypto data for {crypto_symbol}. Check the symbol (e.g., BTCUSDT).")
+        st.stop() # Stops the script here so it doesn't crash later
+except Exception as e:
+    st.error("Connection error with Binance API.")
+    st.stop()
 
     # ---------------- PREDICTION FUNCTION ----------------
     # Uses Linear Regression for trend and calculates SMA for technical context
     def get_model_predictions(series):
-        # Linear Regression
-        series = series.ffill().dropna()
-        y = series.values
-        X = np.array(range(len(y))).reshape(-1, 1)
-        model = LinearRegression().fit(X, y)
+    # Check if we have enough data (at least 2 points to draw a line)
+    if series.empty or len(series) < 2:
+        return np.array([0] * 30), series # Return dummy zeros if no data
         
-        # Predict next 30 days
-        future_X = np.array(range(len(y), len(y) + 30)).reshape(-1, 1)
-        future_preds = model.predict(future_X)
-        
-        # 50-Day Moving Average
-        sma = series.rolling(window=50).mean()
-        
-        return future_preds, sma
+    series = series.ffill().dropna()
+    y = series.values
+    X = np.array(range(len(y))).reshape(-1, 1)
+    
+    model = LinearRegression().fit(X, y)
+    
+    future_X = np.array(range(len(y), len(y) + 30)).reshape(-1, 1)
+    future_preds = model.predict(future_X)
+    
+    sma = series.rolling(window=50).mean()
+    return future_preds, sma
 
     s_future, s_sma = get_model_predictions(stock_data['Close'])
     c_future, c_sma = get_model_predictions(crypto_df['Close'])
