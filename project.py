@@ -30,7 +30,7 @@ with st. sidebar:
     st.divider()
     st.header("🔍 Asset Selection")
     stock_symbol = st.text_input("Stock (e.g., AAPL)", "AAPL")
-    crypto_symbol = st.text_input("Crypto (e.g., BTCUSDT)", "BTCUSDT")
+    crypto_symbol = st.text_input("Crypto (e.g., BTC-USD)", "BTC-USD")
     bond_symbol = st.text_input("Bond ETF (e.g., BND, TLT)", "BND")
 
 # ---------------- CURRENCY CONVERSION ----------------
@@ -51,23 +51,7 @@ try:
         st.stop()
 
     # 2. BINANCE API FOR CRYPTO
-    url = f"https://api.binance.com/api/v3/klines?symbol={crypto_symbol.upper()}&interval=1d&limit=365"
-
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    res = response.json()
-
-    if isinstance(res, dict) and "msg" in res:
-        st.error(f"Crypto symbol '{crypto_symbol}' not found on Binance.")
-        st.stop()
-
-    crypto_df = pd.DataFrame(res, columns=[
-        "Open Time", "Open", "High", "Low", "Close", "Vol",
-        "CT", "QV", "NT", "TB", "TQ", "I"
-    ])
-
-    crypto_df["Close"] = pd.to_numeric(crypto_df["Close"], errors="coerce")
-    crypto_df = crypto_df.dropna()
+    crypto_data = yf.Ticker(crypto_symbol).history(period="1y")
 
 except Exception as e:
     st.error("A connection error occurred while fetching live data.")
@@ -95,12 +79,12 @@ except Exception as e:
         return future_preds, sma
 
     s_future, s_sma = get_model_predictions(stock_data['Close'])
-    c_future, c_sma = get_model_predictions(crypto_df['Close'])
+    c_future, c_sma = get_model_predictions(crypto_data['Close'])
     b_future, b_sma = get_model_predictions(bond_data['Close'])
     
     # ---------------- RISK CALCULATION ----------------
     s_vol = stock_data['Close'].pct_change().dropna().std() * np.sqrt(252)
-    c_vol = crypto_df['Close'].pct_change().std() * np.sqrt(365)
+    c_vol = crypto_data['Close'].pct_change().std() * np.sqrt(365)
     b_vol = bond_data['Close'].pct_change().std() * np.sqrt(252)
 
     def get_risk_label(vol):
@@ -171,7 +155,7 @@ except Exception as e:
         return fig
     # Display the charts
     col_a.plotly_chart(create_plot(f"{stock_symbol} Trend", stock_data['Close'], s_sma, s_future), use_container_width=True)
-    col_b.plotly_chart(create_plot(f"{crypto_symbol} Trend", crypto_df['Close'], c_sma, c_future), use_container_width=True)
+    col_b.plotly_chart(create_plot(f"{crypto_symbol} Trend", crypto_data['Close'], c_sma, c_future), use_container_width=True)
     col_c.plotly_chart(create_plot(f"{bond_symbol} Trend", bond_data['Close'], b_sma, b_future), use_container_width=True)
 
     # ---------------- RISK COMPARISON ----------------
@@ -199,7 +183,7 @@ except Exception as e:
 
     stock_return = get_annual_return(stock_data['Close'], 252)
     bond_return = get_annual_return(bond_data['Close'], 252)
-    crypto_return = get_annual_return(crypto_df['Close'], 365) # Crypto is 24/7
+    crypto_return = get_annual_return(crypto_data['Close'], 365) # Crypto is 24/7
 
 # Limit extreme values
     stock_return = max(min(stock_return,0.8),-0.5)
