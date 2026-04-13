@@ -41,33 +41,36 @@ savings_usd = savings * to_usd
 monthly_invest_usd = monthly_invest * to_usd
 
 try:
-    # ---------------- FETCH LIVE DATA ----------------
+    # 1. FETCH LIVE DATA
     stock_data = yf.Ticker(stock_symbol).history(period="1y")
     bond_data = yf.Ticker(bond_symbol).history(period="1y")
 
+    # Guard rail: Check if Yahoo Finance actually returned data
     if stock_data.empty or bond_data.empty:
-        st.error("One or more ticker symbols (Stock/Bond) are invalid. Please check your inputs.")
+        st.error("Could not find data for the Stock or Bond symbol. Please check the tickers.")
         st.stop()
 
-    # Binance API for Crypto
-    # Replace your current Crypto fetching block with this:
-try:
+    # 2. BINANCE API FOR CRYPTO
     url = f"https://api.binance.com/api/v3/klines?symbol={crypto_symbol.upper()}&interval=1d&limit=365"
     res = requests.get(url)
-    data = res.json()
-    
-    if isinstance(data, list) and len(data) > 0:
-        crypto_df = pd.DataFrame(data, columns=[
+    crypto_json = res.json()
+
+    # Guard rail: Check if Binance returned a valid list of data
+    if isinstance(crypto_json, list) and len(crypto_json) > 0:
+        crypto_df = pd.DataFrame(crypto_json, columns=[
             "Open Time", "Open", "High", "Low", "Close", "Vol",
             "CT", "QV", "NT", "TB", "TQ", "I"
         ])
         crypto_df["Close"] = crypto_df["Close"].astype(float)
     else:
-        st.error(f"Could not find crypto data for {crypto_symbol}. Check the symbol (e.g., BTCUSDT).")
-        st.stop() # Stops the script here so it doesn't crash later
+        st.error(f"Crypto symbol '{crypto_symbol}' not found on Binance.")
+        st.stop()
+
 except Exception as e:
-    st.error("Connection error with Binance API.")
+    st.error("A connection error occurred while fetching live data.")
+    st.exception(e)
     st.stop()
+
 
     # ---------------- PREDICTION FUNCTION ----------------
     # Uses Linear Regression for trend and calculates SMA for technical context
