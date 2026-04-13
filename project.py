@@ -12,7 +12,7 @@ from streamlit_autorefresh import st_autorefresh
 st.set_page_config(page_title="Investment Strategy Simulator", layout="wide")
 
 # ---------------- AUTO REFRESH ----------------
-st_autorefresh(interval=10000, key="refresh")
+st_autorefresh(interval=60000, key="refresh") # 60 seconds
 
 # ---------------- TITLE ----------------
 st.title(" Personal Investment Strategy Simulator (Live)")
