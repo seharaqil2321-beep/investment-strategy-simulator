@@ -53,21 +53,21 @@ try:
     # 2. BINANCE API FOR CRYPTO
     url = f"https://api.binance.com/api/v3/klines?symbol={crypto_symbol.upper()}&interval=1d&limit=365"
 
-response = requests.get(url, timeout=10)
-response.raise_for_status()
-res = response.json()
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    res = response.json()
 
-if isinstance(res, dict) and "msg" in res:
-    st.error(f"Crypto symbol '{crypto_symbol}' not found on Binance.")
-    st.stop()
+    if isinstance(res, dict) and "msg" in res:
+        st.error(f"Crypto symbol '{crypto_symbol}' not found on Binance.")
+        st.stop()
 
-crypto_df = pd.DataFrame(res, columns=[
-    "Open Time", "Open", "High", "Low", "Close", "Vol",
-    "CT", "QV", "NT", "TB", "TQ", "I"
-])
+    crypto_df = pd.DataFrame(res, columns=[
+        "Open Time", "Open", "High", "Low", "Close", "Vol",
+        "CT", "QV", "NT", "TB", "TQ", "I"
+    ])
 
-crypto_df["Close"] = pd.to_numeric(crypto_df["Close"], errors="coerce")
-crypto_df = crypto_df.dropna()
+    crypto_df["Close"] = pd.to_numeric(crypto_df["Close"], errors="coerce")
+    crypto_df = crypto_df.dropna()
 
 except Exception as e:
     st.error("A connection error occurred while fetching live data.")
