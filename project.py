@@ -76,8 +76,8 @@ except Exception as e:
     # Uses Linear Regression for trend and calculates SMA for technical context
     def get_model_predictions(series):
     # Check if we have enough data (at least 2 points to draw a line)
-    if series.empty or len(series) < 2:
-        return np.array([0] * 30), series # Return dummy zeros if no data
+        if series.empty or len(series) < 2:
+            return np.array([0] * 30), series # Return dummy zeros if no data
         
     series = series.ffill().dropna()
     y = series.values
