@@ -58,7 +58,7 @@ try:
     # Uses Linear Regression for trend and calculates SMA for technical context
     def get_model_predictions(series):
         # Linear Regression
-        series = series.fillna(method="ffill").dropna()
+        series = series.ffill().dropna()
         y = series.values
         X = np.array(range(len(y))).reshape(-1, 1)
         model = LinearRegression().fit(X, y)
