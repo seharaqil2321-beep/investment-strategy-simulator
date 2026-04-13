@@ -89,7 +89,7 @@ except Exception as e:
     future_preds = model.predict(future_X)
     
     sma = series.rolling(window=50).mean()
-    return future_preds, sma
+            return future_preds, sma
 
     s_future, s_sma = get_model_predictions(stock_data['Close'])
     c_future, c_sma = get_model_predictions(crypto_df['Close'])
