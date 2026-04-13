@@ -79,16 +79,16 @@ except Exception as e:
         if series.empty or len(series) < 2:
             return np.array([0] * 30), series # Return dummy zeros if no data
         
-    series = series.ffill().dropna()
-    y = series.values
-    X = np.array(range(len(y))).reshape(-1, 1)
+        series = series.ffill().dropna()
+        y = series.values
+        X = np.array(range(len(y))).reshape(-1, 1)
     
-    model = LinearRegression().fit(X, y)
+        model = LinearRegression().fit(X, y)
     
-    future_X = np.array(range(len(y), len(y) + 30)).reshape(-1, 1)
-    future_preds = model.predict(future_X)
+        future_X = np.array(range(len(y), len(y) + 30)).reshape(-1, 1)
+        future_preds = model.predict(future_X)
     
-    sma = series.rolling(window=50).mean()
+        sma = series.rolling(window=50).mean()
         return future_preds, sma
 
     s_future, s_sma = get_model_predictions(stock_data['Close'])
