@@ -45,9 +45,9 @@ try:
     stock_data = yf.Ticker(stock_symbol).history(period="1y")
     bond_data = yf.Ticker(bond_symbol).history(period="1y")
 
-if stock_data.empty or bond_data.empty:
-    st.error("One or more ticker symbols (Stock/Bond) are invalid. Please check your inputs.")
-    st.stop()
+    if stock_data.empty or bond_data.empty:
+        st.error("One or more ticker symbols (Stock/Bond) are invalid. Please check your inputs.")
+        st.stop()
 
     # Binance API for Crypto
     # Replace your current Crypto fetching block with this:
@@ -114,7 +114,7 @@ except Exception as e:
         background-color:{color};
         padding:4px 10px;
         border-radius:10px;
-        color:white;
+        colour: white;
         display:inline-block;
         font-size:12px;
         font-weight:600;">
